@@ -64,34 +64,28 @@ value
 
 1. 이 저장소 복제:
    ```bash
-   git clone https://github.com/your-org/qwen36-tool-calling-fix.git
-   cd qwen36-tool-calling-fix
+   git clone https://github.com/abysslover/qwen36_tool_calling_failure.git
+   cd qwen36_tool_calling_failure
    ```
 
-2. 패치된 템플릿을 Qwen3.6 설치에 복사:
-   ```bash
-   cp chat_template.jinja ~/.cache/huggingface/hub/models--Qwen--Qwen3.6/snapshots/latest/chat_template.jinja
+2. Hugging Face transformers 에서 패치된 템플릿 사용:
+   ```python
+   from transformers import AutoTokenizer
+
+   tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.6-32B-Instruct")
+
+   with open("chat_template.jinja", "r") as f:
+       tokenizer.chat_template = f.read()
    ```
 
 ### vLLM 사용
 
 ```python
-from vllm import LLM, SamplingParams
+from vllm import LLM
 
 llm = LLM(
-    model="Qwen/Qwen3.6",
-    chat_template_path="/path/to/patched/chat_template.jinja"
-)
-```
-
-### Hugging Face transformers 사용
-
-```python
-from transformers import AutoTokenizer
-
-tokenizer = AutoTokenizer.from_pretrained(
-    "Qwen/Qwen3.6",
-    chat_template="path/to/patched/chat_template.jinja"
+    model="Qwen/Qwen3.6-32B-Instruct",
+    chat_template="./chat_template.jinja",
 )
 ```
 
@@ -101,18 +95,12 @@ tokenizer = AutoTokenizer.from_pretrained(
 from llama_cpp import Llama
 
 llm = Llama(
-    model_path="Qwen/Qwen3.6-7B-Instruct",
-    n_ctx=4096,
-    n_threads=8
-)
-
-response = llm.create_chat_completion(
-    messages=[
-        {"role": "user", "content": "계산 결과를 알려주세요"}
-    ],
-    max_tokens=512
+    model_path="./Qwen3.6-32B-Instruct.gguf",
+    chat_format="chatml",
 )
 ```
+
+llama-cpp-python 의 경우, transformers 의 패치된 토크나이저로 프롬프트를 렌더링한 후 `llm.create_completion()` 에 직접 전달하세요.
 
 ## 예상 동작
 
