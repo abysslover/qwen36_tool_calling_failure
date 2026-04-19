@@ -65,36 +65,43 @@ The patched `chat_template.jinja` replaces the proprietary XML format with the s
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-org/qwen36-tool-calling-fix.git
-   cd qwen36-tool-calling-fix
+   git clone https://github.com/abysslover/qwen36_tool_calling_failure.git
+   cd qwen36_tool_calling_failure
    ```
 
-2. Copy the patched template to your Qwen3.6 installation:
-   ```bash
-   cp chat_template.jinja ~/.cache/huggingface/hub/models--Qwen--Qwen3.6/snapshots/latest/chat_template.jinja
+2. Use the patched template with Hugging Face transformers:
+   ```python
+   from transformers import AutoTokenizer
+
+   tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.6-32B-Instruct")
+
+   with open("chat_template.jinja", "r") as f:
+       tokenizer.chat_template = f.read()
    ```
 
 ### Using with vLLM
 
 ```python
-from vllm import LLM, SamplingParams
+from vllm import LLM
 
 llm = LLM(
-    model="Qwen/Qwen3.6",
-    chat_template_path="/path/to/patched/chat_template.jinja"
+    model="Qwen/Qwen3.6-32B-Instruct",
+    chat_template="./chat_template.jinja",
 )
 ```
 
-### Using with Hugging Face transformers
+### Using with llama-cpp-python
 
 ```python
-from transformers import AutoTokenizer
+from llama_cpp import Llama
 
-tokenizer = AutoTokenizer.from_pretrained(
-    "Qwen/Qwen3.6",
-    chat_template="path/to/patched/chat_template.jinja"
+llm = Llama(
+    model_path="./Qwen3.6-32B-Instruct.gguf",
+    chat_format="chatml",
 )
 ```
+
+For llama-cpp-python, render the prompt using the patched tokenizer from transformers, then pass it directly to `llm.create_completion()`.
 
 ## Usage Examples
 
